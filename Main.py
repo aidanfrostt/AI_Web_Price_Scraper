@@ -62,7 +62,7 @@ def validate_url(url):
         driver.quit()
         return True
     except Exception as e:
-        print(f"❌ Selenium validation failed: {e}")
+        print(f"Selenium validation failed: {e}")
         return False
 
 def extract_price_from_any_website(url, html_content, product_name):
@@ -145,7 +145,7 @@ def extract_price_from_any_website(url, html_content, product_name):
 
         driver.quit()
     except Exception as e:
-        print(f"❌ Selenium price extraction failed: {e}")
+        print(f"Selenium price extraction failed: {e}")
 
     # 4. Fall back to AI analysis (most comprehensive but slower)
     return extract_price_with_ai_fallback(soup, url, product_name)
@@ -314,7 +314,7 @@ def get_price_with_ai(url, html_content, product_name):
         price = extract_price_from_any_website(url, html_content, product_name)
         
         if price is None:
-            print("⚠️ Using AI fallback for price detection")
+            print("Using AI fallback for price detection")
             soup = BeautifulSoup(html_content, 'html.parser')
 
             price = extract_price_with_ai_fallback(soup, url, product_name)
@@ -327,27 +327,23 @@ def get_price_with_ai(url, html_content, product_name):
 
 def add_product():
     """Add a new product to the CSV file"""
-    print("\n➕ Add New Product")
+    print("\nAdd New Product")
     name = input("Product name: ").strip()
     description = input("Description: ").strip()
     source = input("Source (website name): ").strip()
     url = input("URL: ").strip()
     
-    # if not validate_url(url):
-    #     print("❌ Invalid URL or unable to access the website")
-    #     return
-        
     # Try to fetch price
     try:
         response = requests.get(url, timeout=10)
         if response.status_code == 200:
             price = get_price_with_ai(url, response.text,name)
         else:
-            print("⚠️ Could not fetch webpage with requests. Trying Selenium...")
+            print("Could not fetch webpage with requests. Trying Selenium...")
             price = fetch_price_with_selenium(url, name)
         
         if price is None:
-            print("⚠️ Could not determine price automatically. Please enter manually.")
+            print("Could not determine price automatically. Please enter manually.")
             while True:
                 try:
                     price = float(input("Enter price: "))
@@ -355,8 +351,8 @@ def add_product():
                 except ValueError:
                     print("Invalid price. Please enter a numeric value.")
     except Exception as e:
-        print(f"⚠️ Error fetching price: {e}")
-        print("⚠️ Trying Selenium as a fallback...")
+        print(f"Error fetching price: {e}")
+        print("Trying Selenium as a fallback...")
         price = fetch_price_with_selenium(url,name)
         if price is None:
             while True:
@@ -384,7 +380,7 @@ def add_product():
             writer.writeheader()
         writer.writerow(new_product)
     
-    print(f"✅ Product '{name}' added successfully!")
+    print(f"Product '{name}' added successfully!")
 
 def fetch_price_with_selenium(url, product_name):
     """Fetch price using Selenium as a fallback"""
@@ -404,13 +400,13 @@ def fetch_price_with_selenium(url, product_name):
         print(product_name)
         return get_price_with_ai(url, html_content,product_name)
     except Exception as e:
-        print(f"❌ Selenium error: {e}")
+        print(f"Selenium error: {e}")
         return None
 
 def edit_product():
     """Edit or delete an existing product in the CSV file"""
     if not os.path.exists(CSV_FILE):
-        print("❌ No products found. Please add products first.")
+        print("No products found. Please add products first.")
         return
         
     # Read current products
@@ -420,7 +416,7 @@ def edit_product():
         fieldnames = reader.fieldnames
         
     # Display products with numbers
-    print("\n✏️ Select a product to edit:")
+    print("\nSelect a product to edit:")
     for i, product in enumerate(products, 1):
         print(f"{i}. {product['name']} ({product['source']}) - ${product.get('price', 'N/A')}")
     
@@ -462,7 +458,7 @@ def edit_product():
                 writer = csv.DictWriter(file, fieldnames=fieldnames)
                 writer.writeheader()
                 writer.writerows(products)
-            print("✅ Product deleted successfully!")
+            print("Product deleted successfully!")
         return
     
     # Edit product flow
@@ -488,7 +484,7 @@ def edit_product():
     
     # Validate URL if editing URL field
     if field_to_edit == 'url' and not validate_url(new_value):
-        print("❌ Invalid URL or unable to access the website")
+        print("Invalid URL or unable to access the website")
         return
         
     # Validate price if editing price field
@@ -496,7 +492,7 @@ def edit_product():
         try:
             new_value = float(new_value)
         except ValueError:
-            print("❌ Invalid price. Must be a number.")
+            print("Invalid price. Must be a number.")
             return
     
     # Update the product
@@ -509,19 +505,19 @@ def edit_product():
         writer.writeheader()
         writer.writerows(products)
     
-    print("✅ Product updated successfully!")
+    print("Product updated successfully!")
 
 def get_prices():
     """Fetch current prices for products"""
     if not os.path.exists(CSV_FILE):
-        print("❌ No products found. Please add products first.")
+        print("No products found. Please add products first.")
         return
         
     with open(CSV_FILE, mode="r", newline="") as file:
         reader = csv.DictReader(file)
         products = list(reader)
     
-    print("\n🔍 Select products to update:")
+    print("\nSelect products to update:")
     print("1. Update all products")
     print("2. Select specific products")
     print("0. Cancel")
@@ -564,18 +560,18 @@ def get_prices():
             if response.status_code == 200:
                 price = get_price_with_ai(product['url'], response.text, product['name'])
             else:
-                print(f"⚠️ Failed to fetch webpage with requests (HTTP {response.status_code}). Trying Selenium...")
+                print(f"Failed to fetch webpage with requests (HTTP {response.status_code}). Trying Selenium...")
                 price = fetch_price_with_selenium(product['url'], product['name'])
             
             if price is not None:
                 product['price'] = price
                 product['last_updated'] = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                print(f"✅ New price: ${price:.2f}")
+                print(f"New price: ${price:.2f}")
                 updated_count += 1
             else:
-                print("⚠️ Could not determine new price. Keeping existing price.")
+                print("Could not determine new price. Keeping existing price.")
         except Exception as e:
-            print(f"⚠️ Error fetching price: {e}. Trying Selenium as a fallback...")
+            print(f"Error fetching price: {e}. Trying Selenium as a fallback...")
             price = fetch_price_with_selenium(product['url'], product['name'])
             if price is not None:
                 product['price'] = price
@@ -583,7 +579,7 @@ def get_prices():
                 print(f"✅ New price: ${price:.2f}")
                 updated_count += 1
             else:
-                print("⚠️ Could not determine new price. Keeping existing price.")
+                print("Could not determine new price. Keeping existing price.")
     
     # Save updates
     if updated_count > 0:
@@ -592,16 +588,16 @@ def get_prices():
             writer = csv.DictWriter(file, fieldnames=fieldnames)
             writer.writeheader()
             writer.writerows(products)
-        print(f"\n✅ Updated {updated_count} prices successfully!")
+        print(f"\nUpdated {updated_count} prices successfully!")
     else:
-        print("\n⚠️ No prices were updated.")
+        print("\n No prices were updated.")
 
 def main_menu():
     """Display main menu and handle user choices"""
     while True:
         display_products()
         
-        print("\n📜 Main Menu:")
+        print("\nMain Menu:")
         print("1. Add Product")
         print("2. Edit Product")
         print("3. Get Prices Now")
@@ -624,6 +620,6 @@ def main_menu():
         input("\nPress Enter to continue...")
 
 if __name__ == "__main__":
-    print("🍷 Wine Scraping AI Tool")
+    print("Price Scraping AI Tool")
     print("========================")
     main_menu()
